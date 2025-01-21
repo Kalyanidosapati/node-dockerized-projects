@@ -1,20 +1,38 @@
 pipeline {
-    agent {
-        docker {
-            image 'node:16' // Use a Node.js Docker image with npm pre-installed
-        }
-    }
-    stages {
-        stage("Checkout") {
-            steps {
-                // Checkout the code from the repository
+    agent any
+    stages{
+        stage("checkout"){
+            steps{
                 checkout scm
             }
         }
-        stage("Test") {
+
+        stage("Test"){
+            steps{
+                sh 'install npm'
+                sh 'npm test'
+            }
+        }
+
+        stage("Build"){
+            steps{
+                sh 'npm run build'
+            }
+        }
+
+        stage("Build Image"){
+            steps{
+                sh 'docker build -t my-node-app:1.0 .'
+            }
+        }
+        stage('Docker Push') {
             steps {
-                sh 'npm install' // Install project dependencies
-                sh 'npm test'    // Run tests
+                withCredentials([usernamePassword(credentialsId: 'docker_cred', passwordVariable: 'DOCKERHUB_PASSWORD', usernameVariable: 'DOCKERHUB_USERNAME')]) {
+                    sh 'docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD'
+                    sh 'docker tag my-node-app:1.0 bashidkk/my-node-app:1.0'
+                    sh 'docker push bashidkk/my-node-app:1.0'
+                    sh 'docker logout'
+                }
             }
         }
     }
