@@ -1,5 +1,9 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'node:16' // Use a Node.js Docker image with npm pre-installed
+        }
+    }
     stages {
         stage("Checkout") {
             steps {
@@ -7,13 +11,11 @@ pipeline {
                 checkout scm
             }
         }
-        stage("Test"){
-            steps{
-                sh 'sudo apt update && sudo apt install -y npm'
-                sh 'npm install'
-                sh 'npm test'
+        stage("Test") {
+            steps {
+                sh 'npm install' // Install project dependencies
+                sh 'npm test'    // Run tests
             }
         }
     }
 }
-     
